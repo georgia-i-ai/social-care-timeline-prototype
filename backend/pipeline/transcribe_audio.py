@@ -10,11 +10,11 @@ import functools
 import tempfile
 from pathlib import Path
 
-import whisper
-
 
 @functools.lru_cache(maxsize=1)
 def _model():
+    import whisper  # deferred: importing torch is slow, only pay it on first use
+
     return whisper.load_model("base")
 
 
