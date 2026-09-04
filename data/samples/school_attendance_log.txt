@@ -1,0 +1,10 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+
+Attendance log extract - Elmfield Primary School
+Logged by: Office Administrator
+Date: 6 March 2026
+
+Millie Whitfield (Year 1) has been absent twice this half term without a reason
+given by a parent or carer: Tuesday 3 March and Friday 6 March. Standard absence
+text sent to mobile on file both mornings; no reply received either time. Class
+teacher not made aware of any planned appointments.

@@ -1,0 +1,16 @@
+[project]
+name = "social-care-timeline-prototype"
+version = "0.1.0"
+description = "Tinkering prototype: unstructured social care notes to a structured, reviewable timeline"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "streamlit",
+    "litellm",
+    "python-dotenv",
+    "pillow",
+    "pandas",
+    "openai-whisper",
+]
+
+[tool.uv]
+package = false
