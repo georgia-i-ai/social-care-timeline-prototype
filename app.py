@@ -99,6 +99,8 @@ if "active_case_id" not in st.session_state:
     st.session_state.active_case_id = cases[0]["id"] if cases else None
 if "pending" not in st.session_state:
     st.session_state.pending = None
+if "input_mode" not in st.session_state:
+    st.session_state.input_mode = None
 
 if cases:
     selected = st.sidebar.selectbox(
@@ -112,6 +114,7 @@ if cases:
     if selected != st.session_state.active_case_id:
         st.session_state.active_case_id = selected
         st.session_state.pending = None
+        st.session_state.input_mode = None
 else:
     st.sidebar.info("No cases yet - create one below.")
 
@@ -121,6 +124,7 @@ if st.sidebar.button("Create case", disabled=not new_case_name.strip()):
     new_id = db.create_case(new_case_name.strip())
     st.session_state.active_case_id = new_id
     st.session_state.pending = None
+    st.session_state.input_mode = None
     st.rerun()
 
 case_id = st.session_state.active_case_id
@@ -179,88 +183,32 @@ if st.session_state.pending is not None:
 
 
 # ---------------------------------------------------------------------------
-# Input modes
+# Timeline view: chronology + highlighted documents
 # ---------------------------------------------------------------------------
 
-tab_scan, tab_file, tab_record = st.tabs(
-    ["📷 Scan an image", "📎 Attach a file", "🎙️ Record a conversation"]
-)
+def render_timeline(case_id: int) -> None:
+    st.subheader("Chronology")
 
-with tab_scan:
-    st.write("Capture or upload a photo of a note (handwritten or printed).")
-    camera_image = st.camera_input("Take a photo")
-    uploaded_image = st.file_uploader(
-        "...or upload an image", type=["jpg", "jpeg", "png"], key="scan_upload"
-    )
-    image_file = camera_image or uploaded_image
-    if image_file is not None and st.button("Process image", key="process_scan"):
-        image_bytes = image_file.getvalue()
-        media_type = "image/jpeg" if camera_image else f"image/{image_file.type.split('/')[-1]}"
-        with st.spinner("Transcribing image..."):
-            raw_text = transcribe_image(image_bytes, media_type)
-        set_pending("image", getattr(image_file, "name", "scan"), raw_text, image_bytes, ".jpg")
-        st.rerun()
+    events = db.list_events(case_id)
+    if not events:
+        st.caption("No events yet - add an input below.")
+    else:
+        df = pd.DataFrame([dict(e) for e in events])
+        df = df[["event_date", "category", "summary", "importance", "reason"]]
 
-with tab_file:
-    st.write("Attach a text note (.txt/.md) or an image file (.jpg/.png).")
-    uploaded_file = st.file_uploader(
-        "Choose a file", type=["txt", "md", "jpg", "jpeg", "png"], key="file_upload"
-    )
-    if uploaded_file is not None and st.button("Process file", key="process_file"):
-        file_bytes = uploaded_file.getvalue()
-        result = ingest_file(uploaded_file.name, file_bytes)
-        if result.kind == "unsupported":
-            st.error(result.message)
-        elif result.kind == "text":
-            set_pending("file", uploaded_file.name, result.raw_text, file_bytes, ".txt")
-            st.rerun()
-        elif result.kind == "image":
-            with st.spinner("Transcribing image..."):
-                raw_text = transcribe_image(result.image_bytes, result.media_type)
-            set_pending("file", uploaded_file.name, raw_text, file_bytes, ".jpg")
-            st.rerun()
+        def _row_style(row):
+            color = {"high": "#ffd6d6", "medium": "#fff2cc", "low": "#dff0d8"}.get(row["importance"], "")
+            return [f"background-color: {color}"] * len(row)
 
-with tab_record:
-    st.write("Record a short conversation, or upload an audio file.")
-    audio = st.audio_input("Record")
-    uploaded_audio = st.file_uploader(
-        "...or upload audio", type=["wav", "mp3", "m4a"], key="audio_upload"
-    )
-    audio_file = audio or uploaded_audio
-    if audio_file is not None and st.button("Process recording", key="process_audio"):
-        audio_bytes = audio_file.getvalue()
-        with st.spinner("Transcribing audio locally (first run downloads the model)..."):
-            raw_text = transcribe_audio(audio_bytes)
-        set_pending("audio", getattr(audio_file, "name", "recording"), raw_text, audio_bytes, ".wav")
-        st.rerun()
+        st.dataframe(df.style.apply(_row_style, axis=1), use_container_width=True, hide_index=True)
 
+    st.subheader("Source documents")
 
-# ---------------------------------------------------------------------------
-# Review view: chronology + highlighted documents
-# ---------------------------------------------------------------------------
+    documents = db.list_documents(case_id)
+    if not documents:
+        st.caption("No documents yet.")
+        return
 
-st.divider()
-st.subheader("Chronology")
-
-events = db.list_events(case_id)
-if not events:
-    st.caption("No events yet - add an input above.")
-else:
-    df = pd.DataFrame([dict(e) for e in events])
-    df = df[["event_date", "category", "summary", "importance", "reason"]]
-
-    def _row_style(row):
-        color = {"high": "#ffd6d6", "medium": "#fff2cc", "low": "#dff0d8"}.get(row["importance"], "")
-        return [f"background-color: {color}"] * len(row)
-
-    st.dataframe(df.style.apply(_row_style, axis=1), use_container_width=True, hide_index=True)
-
-st.subheader("Source documents")
-
-documents = db.list_documents(case_id)
-if not documents:
-    st.caption("No documents yet.")
-else:
     doc_events = {}
     for e in events:
         doc_events.setdefault(e["document_id"], []).append(dict(e))
@@ -284,3 +232,88 @@ else:
                 if document["source_type"] == "audio" and document["media_path"]:
                     st.audio(document["media_path"])
                 st.markdown(highlighted, unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Main view: timeline first; input modes are only opened on request, so
+# nothing (camera, mic) requests browser permissions until the user asks for it
+# ---------------------------------------------------------------------------
+
+if st.session_state.input_mode is None:
+    render_timeline(case_id)
+    st.divider()
+    st.write("Add new information to this case:")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("📷 Scan an image", use_container_width=True):
+            st.session_state.input_mode = "scan"
+            st.rerun()
+    with col2:
+        if st.button("📎 Attach a file", use_container_width=True):
+            st.session_state.input_mode = "file"
+            st.rerun()
+    with col3:
+        if st.button("🎙️ Record a conversation", use_container_width=True):
+            st.session_state.input_mode = "record"
+            st.rerun()
+
+else:
+    if st.button("← Back to timeline"):
+        st.session_state.input_mode = None
+        st.rerun()
+    st.divider()
+
+    if st.session_state.input_mode == "scan":
+        st.subheader("Scan an image")
+        st.write("Capture or upload a photo of a note (handwritten or printed).")
+        camera_image = st.camera_input("Take a photo")
+        uploaded_image = st.file_uploader(
+            "...or upload an image", type=["jpg", "jpeg", "png"], key="scan_upload"
+        )
+        image_file = camera_image or uploaded_image
+        if image_file is not None and st.button("Process image", key="process_scan"):
+            image_bytes = image_file.getvalue()
+            media_type = "image/jpeg" if camera_image else f"image/{image_file.type.split('/')[-1]}"
+            with st.spinner("Transcribing image..."):
+                raw_text = transcribe_image(image_bytes, media_type)
+            set_pending("image", getattr(image_file, "name", "scan"), raw_text, image_bytes, ".jpg")
+            st.session_state.input_mode = None
+            st.rerun()
+
+    elif st.session_state.input_mode == "file":
+        st.subheader("Attach a file")
+        st.write("Attach a text note (.txt/.md) or an image file (.jpg/.png).")
+        uploaded_file = st.file_uploader(
+            "Choose a file", type=["txt", "md", "jpg", "jpeg", "png"], key="file_upload"
+        )
+        if uploaded_file is not None and st.button("Process file", key="process_file"):
+            file_bytes = uploaded_file.getvalue()
+            result = ingest_file(uploaded_file.name, file_bytes)
+            if result.kind == "unsupported":
+                st.error(result.message)
+            elif result.kind == "text":
+                set_pending("file", uploaded_file.name, result.raw_text, file_bytes, ".txt")
+                st.session_state.input_mode = None
+                st.rerun()
+            elif result.kind == "image":
+                with st.spinner("Transcribing image..."):
+                    raw_text = transcribe_image(result.image_bytes, result.media_type)
+                set_pending("file", uploaded_file.name, raw_text, file_bytes, ".jpg")
+                st.session_state.input_mode = None
+                st.rerun()
+
+    elif st.session_state.input_mode == "record":
+        st.subheader("Record a conversation")
+        st.write("Record a short conversation, or upload an audio file.")
+        audio = st.audio_input("Record")
+        uploaded_audio = st.file_uploader(
+            "...or upload audio", type=["wav", "mp3", "m4a"], key="audio_upload"
+        )
+        audio_file = audio or uploaded_audio
+        if audio_file is not None and st.button("Process recording", key="process_audio"):
+            audio_bytes = audio_file.getvalue()
+            with st.spinner("Transcribing audio locally (first run downloads the model)..."):
+                raw_text = transcribe_audio(audio_bytes)
+            set_pending("audio", getattr(audio_file, "name", "recording"), raw_text, audio_bytes, ".wav")
+            st.session_state.input_mode = None
+            st.rerun()
