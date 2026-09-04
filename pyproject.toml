@@ -10,6 +10,7 @@ dependencies = [
     "pillow",
     "pandas",
     "openai-whisper",
+    "truststore",
 ]
 
 [tool.uv]
