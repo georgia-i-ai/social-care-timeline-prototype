@@ -3,6 +3,8 @@
 import json
 import os
 
+from pipeline import _ssl_setup  # noqa: F401  (must run before any HTTPS calls)
+
 import litellm
 from dotenv import load_dotenv
 
@@ -143,6 +145,7 @@ def extract_document(raw_text: str, source_type: str) -> dict:
     """
     response = litellm.completion(
         model=MODEL,
+        custom_llm_provider="openai",
         api_base=API_BASE,
         api_key=API_KEY,
         max_tokens=4096,

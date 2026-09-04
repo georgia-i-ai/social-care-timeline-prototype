@@ -3,6 +3,8 @@
 import base64
 import os
 
+from pipeline import _ssl_setup  # noqa: F401  (must run before any HTTPS calls)
+
 import litellm
 from dotenv import load_dotenv
 
@@ -26,6 +28,7 @@ def transcribe_image(image_bytes: bytes, media_type: str) -> str:
 
     response = litellm.completion(
         model=MODEL,
+        custom_llm_provider="openai",
         api_base=API_BASE,
         api_key=API_KEY,
         max_tokens=2048,
