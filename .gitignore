@@ -8,3 +8,11 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Secrets - never commit real credentials
+.env
+!.env.example
+
+# Generated app data (synthetic/local dev only)
+backend/app.db
+backend/media/
