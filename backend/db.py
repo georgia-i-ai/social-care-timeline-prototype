@@ -78,6 +78,23 @@ def list_cases() -> list[sqlite3.Row]:
         ).fetchall()
 
 
+def importance_counts() -> dict[int, dict[str, int]]:
+    """Return {case_id: {importance: count}} across all events.
+
+    Used to show a per-case "flagged for review" summary on the overview,
+    without fetching every case's full detail.
+    """
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT case_id, importance, COUNT(*) AS n "
+            "FROM events GROUP BY case_id, importance"
+        ).fetchall()
+    counts: dict[int, dict[str, int]] = {}
+    for r in rows:
+        counts.setdefault(r["case_id"], {})[r["importance"]] = r["n"]
+    return counts
+
+
 def add_document(
     case_id: int,
     source_type: str,

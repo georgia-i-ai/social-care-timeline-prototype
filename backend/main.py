@@ -58,6 +58,10 @@ class EventIO(BaseModel):
 class CaseOut(BaseModel):
     id: int
     name: str
+    # Counts of events flagged at each reviewer-priority level (not a risk score).
+    high: int = 0
+    medium: int = 0
+    low: int = 0
 
 
 class CreateCaseIn(BaseModel):
@@ -172,7 +176,20 @@ def _build_pending(source_type: str, source_label: str, raw_text: str,
 
 @app.get("/api/cases", response_model=list[CaseOut])
 def list_cases():
-    return [CaseOut(id=c["id"], name=c["name"]) for c in db.list_cases()]
+    counts = db.importance_counts()
+    result = []
+    for c in db.list_cases():
+        cc = counts.get(c["id"], {})
+        result.append(
+            CaseOut(
+                id=c["id"],
+                name=c["name"],
+                high=cc.get("high", 0),
+                medium=cc.get("medium", 0),
+                low=cc.get("low", 0),
+            )
+        )
+    return result
 
 
 @app.post("/api/cases", response_model=CaseOut)
