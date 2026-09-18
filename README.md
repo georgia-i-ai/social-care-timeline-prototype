@@ -9,8 +9,9 @@ highlighted for human review.
 test data (see `data/samples/`), is not connected to any real case management
 system (Liquidlogic or otherwise), and does not do any risk scoring or prediction -
 it only extracts and surfaces what's stated in the text, for a person to review and
-judge. See the project notes for the fuller reasoning behind that "surface, don't
-score" design choice.
+judge. The priority flags it shows are cues for where a reviewer should look first,
+not risk ratings. See the project notes for the fuller reasoning behind that
+"surface, don't score" design choice.
 
 ## How it works
 
@@ -21,11 +22,20 @@ For each input, one of three modes:
 - **Record a conversation** - a short audio recording
 
 ...goes through: transcription (if needed) → LLM extraction into dated, categorised
-events with the exact source quote behind each one → a review step (the extracted
-text, plus a **mandatory** document date - inferred from the content where possible,
-otherwise you're prompted for one) → saved into the case, where it appears in the
-chronology table and as highlighted spans back in the source document. Clicking a
-chronology row scrolls to and highlights its passage in the document below.
+events, each with the source quote behind it → a review step (the extracted text,
+plus a **mandatory** document date - inferred from the content where possible,
+otherwise you're prompted for one) → saved into the case.
+
+Cases are listed on an overview page, each with a reviewer-priority summary: a
+coloured dot for the highest-priority flagged item, plus counts like "3 high · 2 med
+· 4 low" (what to look at first, not a risk score). Opening a case shows its
+chronology two ways, in tabs - a **Timeline** that groups events by date, and a
+**Table** - alongside the source documents. Clicking an event reveals its detail and
+highlights its passage in the source document beside it.
+
+Excerpts are matched back to the source tolerantly (whitespace differences are
+ignored); when the model paraphrased rather than quoted, a best-effort LLM lookup
+relocates the exact passage at save time, so highlighting stays consistent.
 
 ## Architecture
 
@@ -37,7 +47,8 @@ data/       Synthetic seed documents for demoing each input mode
 
 The backend is a thin HTTP layer: `db.py` holds the schema (cases/documents/events)
 and `pipeline/` holds the framework-agnostic logic (transcription, LLM extraction,
-highlight-span finding). `main.py` just wires those up to endpoints.
+highlight-span finding, plus an LLM fallback that relocates paraphrased excerpts).
+`main.py` just wires those up to endpoints.
 
 ## Setup
 
@@ -47,6 +58,10 @@ highlight-span finding). `main.py` just wires those up to endpoints.
 - Node.js + npm
 - `ffmpeg` (for local Whisper audio transcription)
 - Access to an LLM via a LiteLLM proxy
+
+The quickest path is the `Makefile`: `make install` sets up both halves and `make
+dev` runs the backend and frontend together. The steps below are the same thing by
+hand (and you still need to create `backend/.env` as shown).
 
 ### Backend
 
@@ -77,16 +92,28 @@ Then open `http://localhost:3000`.
 
 ## Seed data
 
-`data/samples/` has a handful of short, separate, clearly fictional documents (a
-school note, an attendance log, a teacher observation, a GP referral) - deliberately
-split by source/fact rather than one bundled note, since the point of the tool is
-combining scattered signals across sources into one timeline. Two generator scripts
-produce a matching handwritten-note image and a synthetic phone-call recording
-(macOS only, via `say`):
+`data/samples/` has one directory per fictional case, each with a handful of short,
+separate documents - deliberately split by source/fact rather than one bundled note,
+since the point of the tool is combining scattered signals across sources into one
+timeline. To demo a case, create it in the app and attach its documents one at a
+time. The three cases are chosen to show a range:
+
+- **`whitfield/`** - a mid-level, ambiguous case (a school note, an attendance log, a
+  teacher observation, a GP referral for the mother), where signals build up but no
+  single one is conclusive.
+- **`bennett/`** - only very minor concerns (ordinary settling at school, a rebooked
+  dental appointment, a minor illness), so the timeline stays low-priority throughout.
+- **`harding/`** - a case where it is clearly escalating (repeated missed health
+  appointments, a police domestic-incident notification, a welfare note, a school
+  injury with a disclosure, and an ED attendance with an inconsistent explanation).
+
+The `whitfield/` case also has two generator scripts that produce a matching
+handwritten-note image and a synthetic phone-call recording (macOS only, via `say`),
+to exercise the scan and record modes:
 
 ```
-uv run python data/samples/generate_handwritten_sample.py
-sh data/samples/generate_audio_sample.sh
+uv run python data/samples/whitfield/generate_handwritten_sample.py
+sh data/samples/whitfield/generate_audio_sample.sh
 ```
 
 ## Environment notes

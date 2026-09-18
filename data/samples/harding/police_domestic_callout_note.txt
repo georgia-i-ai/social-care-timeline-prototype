@@ -1,0 +1,14 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+
+Partner agency notification (police to children's services)
+Reference: SYNTHETIC-DEMO
+Date: 14 February 2026
+
+Officers attended 12 Bracken Court at 22:40 on 13 February following a report from
+a neighbour of shouting and "things being thrown". A verbal altercation between the
+mother, Ms Harding, and a male partner was reported; the partner had left before
+officers arrived. Two children were present in the home, including Tyler Harding
+(7), who was awake and described by the attending officer as "very quiet and
+watchful". No arrests made on the night. Notifying children's services as children
+were present during a domestic incident. This is the second call to this address in
+six weeks.

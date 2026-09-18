@@ -1,0 +1,15 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+
+Health records summary - missed contacts
+Logged by: Named Health Visitor, 0-19 Service
+Date: 3 February 2026
+
+Re: Tyler Harding, age 7
+
+Flagging a pattern of missed contacts for Tyler over the last two months. He did
+not attend a routine developmental review (8 December), a follow-up appointment
+about his asthma (13 January), and a dental check (29 January). Reminder letters
+and two text messages were sent; no response received. The school has separately
+mentioned Tyler's attendance has dropped. Attempts to reach mum by phone have been
+unsuccessful. Escalating to the wider team as this is now a repeated non-engagement
+across services.

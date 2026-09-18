@@ -1,0 +1,11 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+
+Community Dental Service - appointment note
+Logged by: Reception team
+Date: 27 January 2026
+
+Leo Bennett (age 4) did not attend his routine dental check this morning. Mum
+phoned about an hour later to apologise, explained she had mixed up the date with
+a work shift, and asked to rebook. New appointment offered and accepted for 5
+February. Mum engaged and apologetic on the call; no further follow-up needed
+beyond the rebooked appointment.

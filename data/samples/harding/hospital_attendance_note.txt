@@ -1,0 +1,16 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+
+Emergency Department attendance summary
+Hospital: St Aldate's General
+Date: 6 March 2026
+
+Re: Tyler Harding, age 7
+
+Attended ED this evening with a suspected fractured left wrist. History given by
+mother was that he "fell off the sofa", but the injury and the swelling looked more
+significant than that account, and the presentation was delayed by around two days.
+Tyler was withdrawn and did not add to the history when asked. X-ray confirmed a
+buckle fracture; wrist placed in a cast. Given the delayed presentation, the
+inconsistent explanation, and existing concerns flagged by the school, a
+safeguarding referral has been made and the on-call paediatric team informed before
+discharge.
