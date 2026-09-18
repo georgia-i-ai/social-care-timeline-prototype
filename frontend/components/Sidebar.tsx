@@ -39,14 +39,25 @@ export function Sidebar() {
   return (
     <aside className="w-64 shrink-0 border-r border-gray-200 p-4 space-y-4">
       <div>
-        <h1 className="font-semibold text-gray-800">Case Timeline Prototype</h1>
+        <Link href="/" className="font-semibold text-gray-800 hover:underline">
+          Case Timeline Prototype
+        </Link>
         <p className="text-xs text-gray-500 mt-1">
           Tinkering demo - synthetic data only, no real case system.
         </p>
       </div>
 
       <div>
-        <h2 className="text-xs font-semibold uppercase text-gray-500 mb-2">Cases</h2>
+        <h2 className="text-xs font-semibold uppercase text-gray-500 mb-2">
+          <Link
+            href="/"
+            className={`hover:underline ${
+              pathname === "/" ? "text-blue-900" : ""
+            }`}
+          >
+            All cases
+          </Link>
+        </h2>
         <ul className="space-y-1">
           {cases.map((c) => {
             const active = pathname === `/cases/${c.id}`;

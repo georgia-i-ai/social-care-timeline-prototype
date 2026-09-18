@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   API_BASE,
@@ -14,6 +15,7 @@ import {
   scanDocument,
 } from "@/lib/api";
 import { ChronologyTable } from "@/components/ChronologyTable";
+import { CaseTimeline } from "@/components/CaseTimeline";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { ScanPanel } from "@/components/ScanPanel";
 import { AttachPanel } from "@/components/AttachPanel";
@@ -21,6 +23,7 @@ import { RecordPanel } from "@/components/RecordPanel";
 import { PendingReview } from "@/components/PendingReview";
 
 type InputMode = "scan" | "file" | "record" | null;
+type ChronologyView = "timeline" | "table";
 
 export default function CasePage() {
   const params = useParams<{ caseId: string }>();
@@ -29,6 +32,7 @@ export default function CasePage() {
   const [caseDetail, setCaseDetail] = useState<CaseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [inputMode, setInputMode] = useState<InputMode>(null);
+  const [chronologyView, setChronologyView] = useState<ChronologyView>("timeline");
   const [pending, setPending] = useState<PendingDocument | null>(null);
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -94,7 +98,15 @@ export default function CasePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Case: {caseDetail.name}</h1>
+      <div className="space-y-2">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+        >
+          ← All cases
+        </Link>
+        <h1 className="text-xl font-semibold">Case: {caseDetail.name}</h1>
+      </div>
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {pending ? (
@@ -106,65 +118,34 @@ export default function CasePage() {
         />
       ) : (
         <>
-          <section className="space-y-3">
-            <h2 className="text-lg font-medium">Chronology</h2>
-            <p className="text-xs text-gray-500">
-              Click a row to jump to its highlighted passage in the source document below.
-            </p>
-            <ChronologyTable
-              events={caseDetail.events}
-              onSelect={handleSelectEvent}
-              focusedEventId={focusedEventId}
-            />
-          </section>
-
-          <section className="space-y-3">
-            <h2 className="text-lg font-medium">Source documents</h2>
-            {caseDetail.documents.length === 0 && (
-              <p className="text-sm text-gray-500">No documents yet.</p>
-            )}
-            <div className="space-y-2">
-              {[...caseDetail.documents].reverse().map((doc) => (
-                <DocumentPanel
-                  key={doc.id}
-                  document={doc}
-                  focusedEventId={focusedEventId}
-                  expanded={expandedDocId === doc.id}
-                  onToggle={() => setExpandedDocId(expandedDocId === doc.id ? null : doc.id)}
-                  apiBase={API_BASE}
-                />
-              ))}
-            </div>
-          </section>
-
           {inputMode === null ? (
-            <section className="space-y-3">
+            <section className="space-y-3 border-b border-gray-200 pb-6">
               <h2 className="text-lg font-medium">Add new information to this case</h2>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => setInputMode("scan")}
-                  className="rounded bg-gray-100 hover:bg-gray-200 px-4 py-3 border border-gray-300"
+                  className="rounded bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
                 >
                   📷 Scan an image
                 </button>
                 <button
                   onClick={() => setInputMode("file")}
-                  className="rounded bg-gray-100 hover:bg-gray-200 px-4 py-3 border border-gray-300"
+                  className="rounded bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
                 >
                   📎 Attach a file
                 </button>
                 <button
                   onClick={() => setInputMode("record")}
-                  className="rounded bg-gray-100 hover:bg-gray-200 px-4 py-3 border border-gray-300"
+                  className="rounded bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
                 >
                   🎙️ Record a conversation
                 </button>
               </div>
             </section>
           ) : (
-            <section className="space-y-3 border-t border-gray-200 pt-4">
+            <section className="space-y-3 border-b border-gray-200 pb-6">
               <button onClick={() => setInputMode(null)} className="text-sm text-blue-600">
-                ← Back to timeline
+                ← Cancel
               </button>
               {inputMode === "scan" && (
                 <ScanPanel
@@ -186,6 +167,72 @@ export default function CasePage() {
               )}
             </section>
           )}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-lg font-medium">Chronology</h2>
+                <div className="inline-flex overflow-hidden rounded border border-gray-300 text-sm">
+                  <button
+                    onClick={() => setChronologyView("timeline")}
+                    className={`px-3 py-1 ${
+                      chronologyView === "timeline"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    Timeline
+                  </button>
+                  <button
+                    onClick={() => setChronologyView("table")}
+                    className={`border-l border-gray-300 px-3 py-1 ${
+                      chronologyView === "table"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    Table
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">
+                Click an event to reveal its detail and highlight its passage in the source
+                documents.
+              </p>
+              {chronologyView === "timeline" ? (
+                <CaseTimeline
+                  events={caseDetail.events}
+                  onSelect={handleSelectEvent}
+                  focusedEventId={focusedEventId}
+                />
+              ) : (
+                <ChronologyTable
+                  events={caseDetail.events}
+                  onSelect={handleSelectEvent}
+                  focusedEventId={focusedEventId}
+                />
+              )}
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-medium">Source documents</h2>
+              {caseDetail.documents.length === 0 && (
+                <p className="text-sm text-gray-500">No documents yet.</p>
+              )}
+              <div className="space-y-2">
+                {[...caseDetail.documents].reverse().map((doc) => (
+                  <DocumentPanel
+                    key={doc.id}
+                    document={doc}
+                    focusedEventId={focusedEventId}
+                    expanded={expandedDocId === doc.id}
+                    onToggle={() => setExpandedDocId(expandedDocId === doc.id ? null : doc.id)}
+                    apiBase={API_BASE}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
         </>
       )}
     </div>

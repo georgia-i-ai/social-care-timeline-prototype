@@ -1,12 +1,7 @@
 "use client";
 
 import { EventRow } from "@/lib/api";
-
-const IMPORTANCE_BG: Record<string, string> = {
-  high: "bg-red-100",
-  medium: "bg-amber-100",
-  low: "bg-green-100",
-};
+import { IMPORTANCE_BG } from "@/lib/importance";
 
 export function ChronologyTable({
   events,

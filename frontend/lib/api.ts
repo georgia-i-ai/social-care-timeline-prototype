@@ -3,6 +3,10 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhos
 export interface CaseSummary {
   id: number;
   name: string;
+  // Counts of events flagged at each reviewer-priority level (not a risk score).
+  high: number;
+  medium: number;
+  low: number;
 }
 
 export interface EventIO {
