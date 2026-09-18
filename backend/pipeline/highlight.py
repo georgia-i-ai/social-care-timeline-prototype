@@ -7,7 +7,7 @@ actual <mark> elements happens in the frontend.
 import re
 
 
-def _locate(raw_text: str, excerpt: str) -> tuple[int, int] | None:
+def locate(raw_text: str, excerpt: str) -> tuple[int, int] | None:
     """Find an excerpt in the source, returning (start, end) offsets or None.
 
     Offsets are always into the original ``raw_text`` (never a normalised copy),
@@ -45,7 +45,7 @@ def find_highlight_spans(raw_text: str, events: list[dict]) -> list[dict]:
         excerpt = (event.get("verbatim_excerpt") or "").strip()
         if not excerpt:
             continue
-        located = _locate(raw_text, excerpt)
+        located = locate(raw_text, excerpt)
         if located is None:
             continue
         start, end = located

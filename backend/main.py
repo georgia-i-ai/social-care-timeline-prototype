@@ -17,8 +17,9 @@ from pydantic import BaseModel, Field
 import db
 from dates import resolve_event_dates
 from pipeline.extract import extract_document
-from pipeline.highlight import find_highlight_spans
+from pipeline.highlight import find_highlight_spans, locate
 from pipeline.ingest_file import ingest_file
+from pipeline.resolve_excerpt import resolve_excerpt
 from pipeline.transcribe_audio import transcribe_audio
 from pipeline.transcribe_image import transcribe_image
 
@@ -152,6 +153,22 @@ def _normalize_events(events: list[dict]) -> list[dict]:
         event.setdefault("verbatim_excerpt", "")
         event.setdefault("reason", "")
     return events
+
+
+def _resolve_excerpts(raw_text: str, events: list[dict]) -> None:
+    """Repair excerpts the model paraphrased, in place, before saving.
+
+    Any event whose excerpt can't already be located verbatim in the source
+    gets a best-effort LLM lookup for the exact passage. Done once here (not on
+    every read) so highlighting stays consistent without slowing case loads.
+    """
+    for event in events:
+        excerpt = (event.get("verbatim_excerpt") or "").strip()
+        if excerpt and locate(raw_text, excerpt) is not None:
+            continue
+        resolved = resolve_excerpt(raw_text, event.get("summary", ""), excerpt)
+        if resolved:
+            event["verbatim_excerpt"] = resolved
 
 
 def _build_pending(source_type: str, source_label: str, raw_text: str,
@@ -298,6 +315,7 @@ def save_document(case_id: int, payload: ConfirmDocumentIn):
     )
 
     events = resolve_event_dates([e.model_dump() for e in payload.events], payload.document_date)
+    _resolve_excerpts(payload.raw_text, events)
     if events:
         db.add_events(doc_id, case_id, events)
 
