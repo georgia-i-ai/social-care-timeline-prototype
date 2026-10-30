@@ -18,7 +18,8 @@ not risk ratings. See the project notes for the fuller reasoning behind that
 For each input, one of three modes:
 
 - **Scan an image** - a photo of a handwritten or printed note
-- **Attach a file** - a `.txt`/`.md` note, or an image
+- **Attach a file** - a `.txt`/`.md` note, an image, or an existing audio file
+  (`.wav`, `.mp3`, `.m4a`, `.ogg`, `.flac`), which is transcribed like a recording
 - **Record a conversation** - a short audio recording
 
 ...goes through: transcription (if needed) → LLM extraction into dated, categorised
@@ -74,7 +75,14 @@ uv run uvicorn main:app --reload --port 8000
 
 `LITELLM_MODEL` must be a model name the proxy actually serves (check
 `GET {LITELLM_PROXY_URL}/v1/models`) - a vision-capable model is needed for the
-scan/attach-image modes. Audio transcription runs locally via Whisper, not through
+scan/attach-image modes. `bedrock-claude-sonnet-5-eu` is known to work. Proxy model
+names change over time, so if every upload fails with "Invalid model name", re-check
+that list.
+
+The model must also support *forced tool use*: extraction sets `tool_choice` to a
+named function so the model has to reply with structured events rather than free
+text. Not every model allows this - `bedrock-claude-sonnet-5-5-eu`, for example,
+rejects it with "does not support forced tool use", so it can't be used here as-is. Audio transcription runs locally via Whisper, not through
 the proxy, so it needs no extra config beyond `ffmpeg` being installed.
 
 ### Frontend
@@ -107,14 +115,32 @@ time. The three cases are chosen to show a range:
   appointments, a police domestic-incident notification, a welfare note, a school
   injury with a disclosure, and an ED attendance with an inconsistent explanation).
 
-The `whitfield/` case also has two generator scripts that produce a matching
-handwritten-note image and a synthetic phone-call recording (macOS only, via `say`),
-to exercise the scan and record modes:
+The `whitfield/` case also has a generator script for a matching handwritten-note
+image, to exercise scan mode:
 
 ```
 uv run python data/samples/whitfield/generate_handwritten_sample.py
-sh data/samples/whitfield/generate_audio_sample.sh
 ```
+
+To exercise record mode, `data/samples/generate_audio_sample.py` turns any
+conversation transcript into a `.wav` with a different synthetic voice per speaker
+(local [Kokoro](https://github.com/hexgrad/kokoro) TTS; the speaker labels are not
+spoken). It is standalone, so `uv` installs its dependencies on first run (this
+includes PyTorch and downloads the model, so the first run is slow):
+
+```
+uv run data/samples/generate_audio_sample.py data/samples/whitfield/social_worker_call.txt
+```
+
+Each case has one conversation, with its generated `.wav` alongside:
+`whitfield/social_worker_call`, `bennett/health_visitor_call` (a routine catch-up
+confirming the minor issues resolved) and `harding/social_worker_call` (a call after
+the hospital referral, where the mother's account doesn't hold together). Upload a
+`.wav` via **Attach a file** or **Record a conversation**.
+
+Transcripts are plain text, one `Speaker: line` per line. Voices are assigned in
+order of appearance; pin them with `# voice Name=voice_id` lines (see
+`whitfield/social_worker_call.txt`).
 
 ## Environment notes
 
