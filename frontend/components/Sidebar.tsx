@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Button, Input, ServiceNavigation } from "@i-dot-ai-npm/component-library-react";
+import { Button, Input } from "@i-dot-ai-npm/component-library-react";
 import { CaseSummary, createCase, listCases } from "@/lib/api";
 
 export function Sidebar() {
@@ -37,34 +37,31 @@ export function Sidebar() {
     }
   }
 
-  // next/link rather than the kit's ServiceNavigationItem (a plain <a>), to keep
-  // client-side navigation; the kit's CSS classes still style it.
+  // The kit's side-nav components ship no CSS and render plain <a> (full page
+  // reloads), so this is a GOV.UK list of next/link links instead.
   const item = (href: string, label: string, current: boolean) => (
     <li
       key={href}
-      className={`govuk-service-navigation__item ${
-        current ? "govuk-service-navigation__item--active" : ""
-      }`}
+      style={{
+        borderLeft: `4px solid ${current ? "#1d70b8" : "transparent"}`,
+        paddingLeft: 10,
+      }}
     >
       <Link
-        className="govuk-service-navigation__link"
+        className={`govuk-link govuk-link--no-visited-state govuk-link--no-underline ${
+          current ? "govuk-!-font-weight-bold" : ""
+        }`}
         href={href}
         aria-current={current ? "page" : undefined}
       >
-        {current ? <strong className="govuk-service-navigation__active-fallback">{label}</strong> : label}
+        {label}
       </Link>
     </li>
   );
 
   return (
     <aside style={{ width: 260, flexShrink: 0 }} className="govuk-!-padding-top-6 govuk-!-padding-right-4">
-      <ServiceNavigation sideNav navigationId="case-navigation" ariaLabel="Cases">
-        {item("/", "All cases", pathname === "/")}
-        {cases.map((c) => item(`/cases/${c.id}`, c.name, pathname === `/cases/${c.id}`))}
-      </ServiceNavigation>
-      {cases.length === 0 && <p className="govuk-hint">No cases yet.</p>}
-
-      <div className="govuk-!-margin-top-6">
+      <div className="govuk-!-margin-bottom-6">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -78,6 +75,14 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
+
+      <nav aria-label="Cases">
+        <ul className="govuk-list govuk-list--spaced">
+          {item("/", "All cases", pathname === "/")}
+          {cases.map((c) => item(`/cases/${c.id}`, c.name, pathname === `/cases/${c.id}`))}
+        </ul>
+      </nav>
+      {cases.length === 0 && <p className="govuk-hint">No cases yet.</p>}
     </aside>
   );
 }

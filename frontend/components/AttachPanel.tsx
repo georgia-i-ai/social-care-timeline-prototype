@@ -14,9 +14,9 @@ export function AttachPanel({
 
   return (
     <div>
-      <p className="govuk-body">Attach a text note (.txt/.md) or an image file (.jpg/.png).</p>
+      <p className="govuk-body">Attach a text note (.txt/.md), an image (.jpg/.png) or an audio recording (.wav/.mp3/.m4a/.ogg/.flac).</p>
       <FileUpload
-        accept=".txt,.md,.jpg,.jpeg,.png"
+        accept=".txt,.md,.jpg,.jpeg,.png,.wav,.mp3,.m4a,.ogg,.flac"
         aria-label="Note to attach"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
       />

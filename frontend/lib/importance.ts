@@ -21,6 +21,13 @@ export const IMPORTANCE_DOT: Record<string, string> = {
   low: "bg-green-500",
 };
 
+// Text colour - darker shades than IMPORTANCE_DOT, so they stay readable on white.
+export const IMPORTANCE_TEXT: Record<string, string> = {
+  high: "text-red-700",
+  medium: "text-amber-700",
+  low: "text-green-700",
+};
+
 // Colour for the design kit's <Tag>.
 export const IMPORTANCE_TAG: Record<string, "red" | "yellow" | "green"> = {
   high: "red",
@@ -47,13 +54,4 @@ export function topImportance(counts: Counts): Importance | null {
   if (counts.medium > 0) return "medium";
   if (counts.low > 0) return "low";
   return null;
-}
-
-/** e.g. "3 high · 2 med · 4 low", or "No items flagged" when all zero. */
-export function flaggedSummary(counts: Counts): string {
-  const parts: string[] = [];
-  if (counts.high > 0) parts.push(`${counts.high} high`);
-  if (counts.medium > 0) parts.push(`${counts.medium} med`);
-  if (counts.low > 0) parts.push(`${counts.low} low`);
-  return parts.length > 0 ? parts.join(" · ") : "No items flagged";
 }

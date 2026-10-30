@@ -7,6 +7,8 @@ export interface CaseSummary {
   high: number;
   medium: number;
   low: number;
+  // Each event's importance in date order, oldest first.
+  timeline: string[];
 }
 
 export interface EventIO {
