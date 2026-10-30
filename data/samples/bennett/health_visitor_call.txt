@@ -1,0 +1,16 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+# voice Health visitor=bf_emma
+# voice Hannah=bf_alice
+
+Health visitor: Hi Hannah, it's Ruth, the health visitor. Just for my notes, it's Monday the sixteenth of February 2026. I'm ringing about Leo. Is now a good time?
+Hannah: Yes, that's fine, he's at nursery this morning so it's nice and quiet.
+Health visitor: Lovely. Last time we spoke he was finding drop-offs at school a bit hard. How's that going?
+Hannah: Much better, honestly. The new childminder has been brilliant, and he's stopped crying at the gate. His teacher said he runs straight in now.
+Health visitor: That's really good to hear. And I saw he had a dental appointment that needed rebooking.
+Hannah: Yes, that was my fault, I mixed it up with a shift. We went on the fifth and the dentist said his teeth are fine.
+Health visitor: Great. And how's his ear? I know he saw the GP the other week.
+Hannah: All cleared up. He was miserable for a few days, but he's back to his usual self, eating well and sleeping through.
+Health visitor: That all sounds really positive. Is there anything you're worried about at the moment?
+Hannah: Not really. Just the usual juggling with work, but my mum helps out on the days I'm on early.
+Health visitor: Okay. I'll see you both at his next routine review then, and you know where I am if anything comes up.
+Hannah: Thanks Ruth, will do.

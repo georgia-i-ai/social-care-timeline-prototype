@@ -1,0 +1,20 @@
+[SYNTHETIC TEST DATA - fictional, for prototype demo purposes only. No real person.]
+# voice Social worker=bm_george
+# voice Kelly=bf_isabella
+
+Social worker: Hello, is that Kelly Harding? My name's Mark, I'm a social worker with children's services. For my notes, it's Monday the ninth of March 2026. I'm calling about Tyler's visit to the hospital on Friday.
+Kelly: Right. I already told the hospital what happened. He fell off the sofa, that's all.
+Social worker: I understand. The hospital said the wrist had been sore for a couple of days before he came in. Can you tell me a bit about that?
+Kelly: I thought it was just a sprain. Kids are always banging themselves. I didn't want to waste anyone's time.
+Social worker: Okay. Who was at home when he fell?
+Kelly: Just me and the kids.
+Social worker: And is your partner, Dean, living with you at the moment?
+Kelly: No, he's not living here. He just pops round sometimes. He was here that night, but he was in the other room, he didn't see anything.
+Social worker: Thank you for telling me. The school have also been in touch. They've mentioned Tyler has been coming in hungry, and he's missed a few health appointments recently.
+Kelly: I've had a lot on. The letters go to the wrong address half the time. And he eats at home, he's just a growing boy.
+Social worker: I can hear things have been really hard. I also need to ask about the police coming out to your address in February.
+Kelly: That was just an argument. It's sorted now. I don't see why that's anyone's business.
+Social worker: I know this is a lot. Because of Tyler's injury, and the other things that have been raised, I need to come and see you and the children at home. I'd like to do that tomorrow, and I'll want to have a chat with Tyler on his own as well.
+Kelly: Tomorrow? I suppose. But he won't say anything different, there's nothing to say.
+Social worker: That's okay. I'll come at ten. If anything happens before then, or you're worried about your safety or the children's, please call me or the police straight away.
+Kelly: Fine.
