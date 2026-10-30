@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { Button, Input, ServiceNavigation } from "@i-dot-ai-npm/component-library-react";
 import { CaseSummary, createCase, listCases } from "@/lib/api";
 
 export function Sidebar() {
@@ -36,63 +37,46 @@ export function Sidebar() {
     }
   }
 
+  // next/link rather than the kit's ServiceNavigationItem (a plain <a>), to keep
+  // client-side navigation; the kit's CSS classes still style it.
+  const item = (href: string, label: string, current: boolean) => (
+    <li
+      key={href}
+      className={`govuk-service-navigation__item ${
+        current ? "govuk-service-navigation__item--active" : ""
+      }`}
+    >
+      <Link
+        className="govuk-service-navigation__link"
+        href={href}
+        aria-current={current ? "page" : undefined}
+      >
+        {current ? <strong className="govuk-service-navigation__active-fallback">{label}</strong> : label}
+      </Link>
+    </li>
+  );
+
   return (
-    <aside className="w-64 shrink-0 border-r border-gray-200 p-4 space-y-4">
-      <div>
-        <Link href="/" className="font-semibold text-gray-800 hover:underline">
-          Case Timeline Prototype
-        </Link>
-        <p className="text-xs text-gray-500 mt-1">
-          Tinkering demo - synthetic data only, no real case system.
-        </p>
-      </div>
+    <aside style={{ width: 260, flexShrink: 0 }} className="govuk-!-padding-top-6 govuk-!-padding-right-4">
+      <ServiceNavigation sideNav navigationId="case-navigation" ariaLabel="Cases">
+        {item("/", "All cases", pathname === "/")}
+        {cases.map((c) => item(`/cases/${c.id}`, c.name, pathname === `/cases/${c.id}`))}
+      </ServiceNavigation>
+      {cases.length === 0 && <p className="govuk-hint">No cases yet.</p>}
 
-      <div>
-        <h2 className="text-xs font-semibold uppercase text-gray-500 mb-2">
-          <Link
-            href="/"
-            className={`hover:underline ${
-              pathname === "/" ? "text-blue-900" : ""
-            }`}
-          >
-            All cases
-          </Link>
-        </h2>
-        <ul className="space-y-1">
-          {cases.map((c) => {
-            const active = pathname === `/cases/${c.id}`;
-            return (
-              <li key={c.id}>
-                <Link
-                  href={`/cases/${c.id}`}
-                  className={`block rounded px-2 py-1 text-sm ${
-                    active ? "bg-blue-100 font-medium text-blue-900" : "hover:bg-gray-100"
-                  }`}
-                >
-                  {c.name}
-                </Link>
-              </li>
-            );
-          })}
-          {cases.length === 0 && <li className="text-sm text-gray-400">No cases yet.</li>}
-        </ul>
-      </div>
-
-      <div className="space-y-2 border-t border-gray-200 pt-3">
-        <input
+      <div className="govuk-!-margin-top-6">
+        <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           placeholder="New case name"
-          className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+          aria-label="New case name"
         />
-        <button
-          disabled={!name.trim() || creating}
-          onClick={handleCreate}
-          className="w-full rounded bg-blue-600 text-white px-2 py-1 text-sm disabled:opacity-50"
-        >
-          {creating ? "Creating..." : "Create case"}
-        </button>
+        <div className="govuk-!-margin-top-2">
+          <Button small type="button" disabled={!name.trim() || creating} onClick={handleCreate}>
+            {creating ? "Creating..." : "Create case"}
+          </Button>
+        </div>
       </div>
     </aside>
   );

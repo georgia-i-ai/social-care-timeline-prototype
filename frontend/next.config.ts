@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The kit's React wrappers ship as raw TypeScript source.
+  transpilePackages: ["@i-dot-ai-npm/component-library-react"],
 };
 
 export default nextConfig;

@@ -9,9 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@i-dot-ai-npm/component-library-frontend": "^0.0.11",
+    "@i-dot-ai-npm/component-library-react": "^0.0.10",
+    "govuk-frontend": "^6.5.1",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sass": "^1.105.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

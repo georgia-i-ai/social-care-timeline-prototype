@@ -21,6 +21,13 @@ export const IMPORTANCE_DOT: Record<string, string> = {
   low: "bg-green-500",
 };
 
+// Colour for the design kit's <Tag>.
+export const IMPORTANCE_TAG: Record<string, "red" | "yellow" | "green"> = {
+  high: "red",
+  medium: "yellow",
+  low: "green",
+};
+
 // Border to pair with IMPORTANCE_BG.
 export const IMPORTANCE_BORDER: Record<string, string> = {
   high: "border-red-300",

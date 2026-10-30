@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Button, ButtonGroup } from "@i-dot-ai-npm/component-library-react";
 import {
   API_BASE,
   CaseDetail,
@@ -93,21 +94,16 @@ export default function CasePage() {
     setExpandedDocId(event.document_id);
   }
 
-  if (loading && !caseDetail) return <p>Loading...</p>;
-  if (!caseDetail) return <p className="text-red-600">{error ?? "Case not found."}</p>;
+  if (loading && !caseDetail) return <p className="govuk-body">Loading...</p>;
+  if (!caseDetail) return <p className="govuk-error-message">{error ?? "Case not found."}</p>;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
-        >
-          ← All cases
-        </Link>
-        <h1 className="text-xl font-semibold">Case: {caseDetail.name}</h1>
-      </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+    <>
+      <Link href="/" className="govuk-back-link">
+        All cases
+      </Link>
+      <h1 className="govuk-heading-l">Case: {caseDetail.name}</h1>
+      {error && <p className="govuk-error-message">{error}</p>}
 
       {pending ? (
         <PendingReview
@@ -119,34 +115,25 @@ export default function CasePage() {
       ) : (
         <>
           {inputMode === null ? (
-            <section className="space-y-3 border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-medium">Add new information to this case</h2>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => setInputMode("scan")}
-                  className="rounded bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
-                >
+            <section className="govuk-!-margin-bottom-6">
+              <h2 className="govuk-heading-m">Add new information to this case</h2>
+              <ButtonGroup>
+                <Button type="button" onClick={() => setInputMode("scan")}>
                   📷 Scan an image
-                </button>
-                <button
-                  onClick={() => setInputMode("file")}
-                  className="rounded bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
-                >
+                </Button>
+                <Button type="button" onClick={() => setInputMode("file")}>
                   📎 Attach a file
-                </button>
-                <button
-                  onClick={() => setInputMode("record")}
-                  className="rounded bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
-                >
+                </Button>
+                <Button type="button" onClick={() => setInputMode("record")}>
                   🎙️ Record a conversation
-                </button>
-              </div>
+                </Button>
+              </ButtonGroup>
             </section>
           ) : (
-            <section className="space-y-3 border-b border-gray-200 pb-6">
-              <button onClick={() => setInputMode(null)} className="text-sm text-blue-600">
-                ← Cancel
-              </button>
+            <section className="govuk-!-margin-bottom-6">
+              <Button type="button" tertiary small onClick={() => setInputMode(null)}>
+                Cancel
+              </Button>
               {inputMode === "scan" && (
                 <ScanPanel
                   submitting={processing}
@@ -168,34 +155,30 @@ export default function CasePage() {
             </section>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <section className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-medium">Chronology</h2>
-                <div className="inline-flex overflow-hidden rounded border border-gray-300 text-sm">
-                  <button
-                    onClick={() => setChronologyView("timeline")}
-                    className={`px-3 py-1 ${
-                      chronologyView === "timeline"
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    Timeline
-                  </button>
-                  <button
-                    onClick={() => setChronologyView("table")}
-                    className={`border-l border-gray-300 px-3 py-1 ${
-                      chronologyView === "table"
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    Table
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500">
+          <div className="govuk-grid-row">
+            <section className="govuk-grid-column-one-half">
+              <h2 className="govuk-heading-m">Chronology</h2>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  small
+                  secondary={chronologyView !== "timeline"}
+                  aria-pressed={chronologyView === "timeline"}
+                  onClick={() => setChronologyView("timeline")}
+                >
+                  Timeline
+                </Button>
+                <Button
+                  type="button"
+                  small
+                  secondary={chronologyView !== "table"}
+                  aria-pressed={chronologyView === "table"}
+                  onClick={() => setChronologyView("table")}
+                >
+                  Table
+                </Button>
+              </ButtonGroup>
+              <p className="govuk-hint">
                 Click an event to reveal its detail and highlight its passage in the source
                 documents.
               </p>
@@ -214,10 +197,10 @@ export default function CasePage() {
               )}
             </section>
 
-            <section className="space-y-3">
-              <h2 className="text-lg font-medium">Source documents</h2>
+            <section className="govuk-grid-column-one-half">
+              <h2 className="govuk-heading-m">Source documents</h2>
               {caseDetail.documents.length === 0 && (
-                <p className="text-sm text-gray-500">No documents yet.</p>
+                <p className="govuk-hint">No documents yet.</p>
               )}
               <div className="space-y-2">
                 {[...caseDetail.documents].reverse().map((doc) => (
@@ -235,6 +218,6 @@ export default function CasePage() {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 }

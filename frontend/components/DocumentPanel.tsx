@@ -96,7 +96,7 @@ export function DocumentPanel({
                 className="max-w-full rounded border"
               />
             )}
-            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+            <div className="govuk-body" style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
               {renderHighlighted(document.raw_text, document.highlights, focusedEventId)}
             </div>
           </div>

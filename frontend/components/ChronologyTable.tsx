@@ -1,8 +1,17 @@
 "use client";
 
 import { Fragment } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Tag,
+} from "@i-dot-ai-npm/component-library-react";
 import { EventRow } from "@/lib/api";
-import { IMPORTANCE_BG, IMPORTANCE_DOT } from "@/lib/importance";
+import { IMPORTANCE_BG, IMPORTANCE_DOT, IMPORTANCE_TAG } from "@/lib/importance";
 import { groupEventsByDate } from "@/lib/groupEvents";
 
 export function ChronologyTable({
@@ -15,55 +24,55 @@ export function ChronologyTable({
   focusedEventId: number | null;
 }) {
   if (events.length === 0) {
-    return <p className="text-sm text-gray-500">No events yet - add an input below.</p>;
+    return <p className="govuk-hint">No events yet - add an input above.</p>;
   }
 
   const groups = groupEventsByDate(events);
 
   return (
-    <div className="overflow-x-auto rounded border border-gray-200">
-      <table className="min-w-full text-sm">
-        <thead className="bg-gray-50 text-left">
-          <tr>
-            <th className="px-3 py-2">Category</th>
-            <th className="px-3 py-2">Summary</th>
-            <th className="px-3 py-2">Importance</th>
-            <th className="px-3 py-2">Reason</th>
-          </tr>
-        </thead>
-        <tbody>
-          {groups.map((group) => (
-            <Fragment key={group.date}>
-              <tr className="border-t border-gray-200 bg-gray-100">
-                <td className="px-3 py-2 font-medium whitespace-nowrap" colSpan={4}>
-                  <span className="inline-flex items-center gap-2">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        group.top ? IMPORTANCE_DOT[group.top] : "bg-gray-400"
-                      }`}
-                    />
-                    {group.date}
-                  </span>
-                </td>
-              </tr>
-              {group.events.map((event) => (
-                <tr
-                  key={event.id}
-                  onClick={() => onSelect(event)}
-                  className={`cursor-pointer border-t border-gray-100 hover:brightness-95 ${
-                    IMPORTANCE_BG[event.importance] ?? ""
-                  } ${event.id === focusedEventId ? "ring-2 ring-inset ring-pink-500" : ""}`}
-                >
-                  <td className="px-3 py-2 whitespace-nowrap">{event.category}</td>
-                  <td className="px-3 py-2">{event.summary}</td>
-                  <td className="px-3 py-2 whitespace-nowrap capitalize">{event.importance}</td>
-                  <td className="px-3 py-2 text-gray-600">{event.reason}</td>
-                </tr>
-              ))}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table smallTextUntilTablet>
+      <TableHead>
+        <TableRow>
+          <TableHeader>Category</TableHeader>
+          <TableHeader>Summary</TableHeader>
+          <TableHeader>Importance</TableHeader>
+          <TableHeader>Reason</TableHeader>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {groups.map((group) => (
+          <Fragment key={group.date}>
+            <TableRow class="bg-gray-100">
+              <TableCell colSpan={4} noWrap>
+                <span className="inline-flex items-center gap-2 font-bold">
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      group.top ? IMPORTANCE_DOT[group.top] : "bg-gray-400"
+                    }`}
+                  />
+                  {group.date}
+                </span>
+              </TableCell>
+            </TableRow>
+            {group.events.map((event) => (
+              <TableRow
+                key={event.id}
+                onClick={() => onSelect(event)}
+                class={`cursor-pointer hover:brightness-95 ${IMPORTANCE_BG[event.importance] ?? ""} ${
+                  event.id === focusedEventId ? "ring-2 ring-inset ring-pink-500" : ""
+                }`}
+              >
+                <TableCell noWrap>{event.category}</TableCell>
+                <TableCell>{event.summary}</TableCell>
+                <TableCell noWrap>
+                  <Tag colour={IMPORTANCE_TAG[event.importance] ?? "grey"}>{event.importance}</Tag>
+                </TableCell>
+                <TableCell>{event.reason}</TableCell>
+              </TableRow>
+            ))}
+          </Fragment>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

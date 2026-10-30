@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button, FileUpload } from "@i-dot-ai-npm/component-library-react";
 
 export function AttachPanel({
   onSubmit,
@@ -12,22 +13,18 @@ export function AttachPanel({
   const [file, setFile] = useState<File | null>(null);
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-gray-600">
-        Attach a text note (.txt/.md) or an image file (.jpg/.png).
-      </p>
-      <input
-        type="file"
+    <div>
+      <p className="govuk-body">Attach a text note (.txt/.md) or an image file (.jpg/.png).</p>
+      <FileUpload
         accept=".txt,.md,.jpg,.jpeg,.png"
+        aria-label="Note to attach"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
       />
-      <button
-        disabled={!file || submitting}
-        onClick={() => file && onSubmit(file)}
-        className="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
-      >
-        {submitting ? "Processing..." : "Process file"}
-      </button>
+      <div className="govuk-!-margin-top-4">
+        <Button type="button" disabled={!file || submitting} onClick={() => file && onSubmit(file)}>
+          {submitting ? "Processing..." : "Process file"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button, ButtonGroup, FileUpload } from "@i-dot-ai-npm/component-library-react";
 
 export function RecordPanel({
   onSubmit,
@@ -40,39 +41,37 @@ export function RecordPanel({
   }
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-gray-600">Record a short conversation, or upload an audio file.</p>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <div>
+      <p className="govuk-body">Record a short conversation, or upload an audio file.</p>
+      {error && <p className="govuk-error-message">{error}</p>}
 
-      <div className="flex gap-2 items-center">
+      <ButtonGroup>
         {!recording ? (
-          <button onClick={startRecording} className="rounded bg-gray-200 px-4 py-2">
+          <Button type="button" secondary onClick={startRecording}>
             ● Start recording
-          </button>
+          </Button>
         ) : (
-          <button onClick={stopRecording} className="rounded bg-red-600 text-white px-4 py-2">
+          <Button type="button" warning onClick={stopRecording}>
             ■ Stop
-          </button>
+          </Button>
         )}
-        <input
-          type="file"
+        <FileUpload
           accept="audio/*"
+          aria-label="Audio file"
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) setBlob(f);
           }}
         />
-      </div>
+      </ButtonGroup>
 
       {blob && <audio controls src={URL.createObjectURL(blob)} />}
 
-      <button
-        disabled={!blob || submitting}
-        onClick={() => blob && onSubmit(blob)}
-        className="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
-      >
-        {submitting ? "Processing..." : "Process recording"}
-      </button>
+      <div className="govuk-!-margin-top-4">
+        <Button type="button" disabled={!blob || submitting} onClick={() => blob && onSubmit(blob)}>
+          {submitting ? "Processing..." : "Process recording"}
+        </Button>
+      </div>
     </div>
   );
 }

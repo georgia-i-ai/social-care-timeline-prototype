@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Button,
+  ButtonGroup,
+  Input,
+  InsetText,
+  Textarea,
+} from "@i-dot-ai-npm/component-library-react";
 import { PendingDocument } from "@/lib/api";
 
 export function PendingReview({
@@ -19,45 +26,36 @@ export function PendingReview({
   const [date, setDate] = useState(inferred ?? new Date().toISOString().slice(0, 10));
 
   return (
-    <div className="space-y-3 rounded border border-amber-300 bg-amber-50 p-4">
-      <p className="font-medium">Review before saving to the case</p>
-      <textarea
-        readOnly
-        value={pending.raw_text}
-        className="w-full h-40 rounded border border-gray-300 p-2 text-sm bg-white"
-      />
+    <InsetText>
+      <h2 className="govuk-heading-m">Review before saving to the case</h2>
+      <Textarea readOnly value={pending.raw_text} rows={8} aria-label="Extracted text" />
 
       {confident ? (
-        <p className="text-sm text-green-700">
+        <p className="govuk-body govuk-!-margin-top-4">
           Document date inferred: {inferred} (high confidence)
         </p>
       ) : (
-        <div className="space-y-1">
-          <p className="text-sm text-red-700">
+        <div className="govuk-!-margin-top-4">
+          <p className="govuk-error-message">
             Couldn&apos;t confidently determine a date for this document from its content -
             please confirm one before it can be saved.
           </p>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="rounded border border-gray-300 px-2 py-1"
-          />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Document date" />
         </div>
       )}
 
-      <div className="flex gap-2">
-        <button
+      <ButtonGroup class="govuk-!-margin-top-4">
+        <Button
+          type="button"
           disabled={saving || !date}
           onClick={() => onConfirm(date, confident ? "high" : "user_provided")}
-          className="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save to case"}
-        </button>
-        <button onClick={onDiscard} className="rounded bg-gray-200 px-4 py-2">
+        </Button>
+        <Button type="button" secondary onClick={onDiscard}>
           Discard
-        </button>
-      </div>
-    </div>
+        </Button>
+      </ButtonGroup>
+    </InsetText>
   );
 }
