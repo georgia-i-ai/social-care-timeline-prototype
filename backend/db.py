@@ -78,6 +78,22 @@ def list_cases() -> list[sqlite3.Row]:
         ).fetchall()
 
 
+def importance_sequences() -> dict[int, list[str]]:
+    """Return {case_id: [importance, ...]} in event-date order, oldest first.
+
+    Lets the overview draw each case's priority-over-time bar without fetching
+    every case's full detail.
+    """
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT case_id, importance FROM events ORDER BY event_date, id"
+        ).fetchall()
+    sequences: dict[int, list[str]] = {}
+    for r in rows:
+        sequences.setdefault(r["case_id"], []).append(r["importance"])
+    return sequences
+
+
 def importance_counts() -> dict[int, dict[str, int]]:
     """Return {case_id: {importance: count}} across all events.
 

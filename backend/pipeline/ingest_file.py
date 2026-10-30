@@ -1,17 +1,20 @@
-"""Route an attached file to the right handling: plain text, image, or unsupported."""
+"""Route an attached file to the right handling: text, image, audio, or unsupported."""
 
 from dataclasses import dataclass
 
 _TEXT_EXTENSIONS = {".txt", ".md"}
 _IMAGE_EXTENSIONS = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
+# Whisper decodes these via ffmpeg, which sniffs the real format.
+_AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a", ".ogg", ".flac"}
 
 
 @dataclass
 class IngestResult:
-    kind: str  # "text" | "image" | "unsupported"
+    kind: str  # "text" | "image" | "audio" | "unsupported"
     raw_text: str | None = None
     image_bytes: bytes | None = None
     media_type: str | None = None
+    extension: str | None = None  # audio only: kept so the stored file keeps its real type
     message: str | None = None
 
 
@@ -28,6 +31,9 @@ def ingest_file(filename: str, file_bytes: bytes) -> IngestResult:
             media_type=_IMAGE_EXTENSIONS[suffix],
         )
 
+    if suffix in _AUDIO_EXTENSIONS:
+        return IngestResult(kind="audio", extension=suffix)
+
     if suffix == ".pdf":
         return IngestResult(
             kind="unsupported",
@@ -39,7 +45,10 @@ def ingest_file(filename: str, file_bytes: bytes) -> IngestResult:
 
     return IngestResult(
         kind="unsupported",
-        message=f"Unsupported file type '{suffix}'. Use .txt, .md, .jpg or .png.",
+        message=(
+            f"Unsupported file type '{suffix}'. Use .txt, .md, .jpg, .png, "
+            ".wav, .mp3, .m4a, .ogg or .flac."
+        ),
     )
 
 

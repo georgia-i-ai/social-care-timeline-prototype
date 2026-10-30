@@ -63,6 +63,8 @@ class CaseOut(BaseModel):
     high: int = 0
     medium: int = 0
     low: int = 0
+    # Each event's importance in date order, for the overview's priority-over-time bar.
+    timeline: list[str] = []
 
 
 class CreateCaseIn(BaseModel):
@@ -194,6 +196,7 @@ def _build_pending(source_type: str, source_label: str, raw_text: str,
 @app.get("/api/cases", response_model=list[CaseOut])
 def list_cases():
     counts = db.importance_counts()
+    sequences = db.importance_sequences()
     result = []
     for c in db.list_cases():
         cc = counts.get(c["id"], {})
@@ -204,6 +207,7 @@ def list_cases():
                 high=cc.get("high", 0),
                 medium=cc.get("medium", 0),
                 low=cc.get("low", 0),
+                timeline=sequences.get(c["id"], []),
             )
         )
     return result
@@ -276,16 +280,23 @@ async def attach_document(case_id: int, file: UploadFile = File(...)):
     if result.kind == "unsupported":
         raise HTTPException(400, result.message)
 
+    source_type = "file"
     if result.kind == "text":
         pending_media_id = _stage_media(file_bytes, ".txt")
         raw_text = result.raw_text
         media_ext = ".txt"
+    elif result.kind == "audio":
+        # "audio" (not "file") so extraction treats it as a conversation and the UI shows a player.
+        source_type = "audio"
+        media_ext = result.extension
+        pending_media_id = _stage_media(file_bytes, media_ext)
+        raw_text = transcribe_audio(file_bytes, media_ext)
     else:  # image
         pending_media_id = _stage_media(file_bytes, ".jpg")
         raw_text = transcribe_image(result.image_bytes, result.media_type)
         media_ext = ".jpg"
 
-    return _build_pending("file", file.filename or "attachment", raw_text, pending_media_id, media_ext)
+    return _build_pending(source_type, file.filename or "attachment", raw_text, pending_media_id, media_ext)
 
 
 @app.post("/api/cases/{case_id}/record", response_model=PendingDocumentOut)
