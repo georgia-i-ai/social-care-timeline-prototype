@@ -8,12 +8,13 @@ SHELL := /bin/bash
 BACKEND_DIR  := backend
 FRONTEND_DIR := frontend
 BACKEND_PORT := 8000
+FRONTEND_PORT := 3000
 
 .DEFAULT_GOAL := help
 
 .PHONY: help \
 	install install-backend install-frontend \
-	dev dev-backend dev-frontend \
+	dev dev-backend dev-frontend stop \
 	build start lint \
 	clean clean-backend clean-frontend
 
@@ -45,6 +46,11 @@ dev-backend: ## Run the backend with autoreload
 
 dev-frontend: ## Run the frontend in development mode
 	cd $(FRONTEND_DIR) && npm run dev
+
+stop: ## Kill any running backend/frontend (e.g. left over from a closed terminal)
+	@# Servers are found by listening port; uvicorn's reloader parent holds no port, so match it by name too.
+	@pids=$$( (lsof -ti tcp:$(BACKEND_PORT) -sTCP:LISTEN; lsof -ti tcp:$(FRONTEND_PORT) -sTCP:LISTEN; pgrep -f "uvicorn main:app") 2>/dev/null | sort -u); \
+	if [ -n "$$pids" ]; then echo "Stopping PIDs: $$pids"; kill $$pids 2>/dev/null || true; else echo "Nothing running."; fi
 
 ## --- Build / production ----------------------------------------------------
 
