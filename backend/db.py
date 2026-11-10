@@ -178,3 +178,46 @@ def list_events(case_id: int) -> list[sqlite3.Row]:
             "SELECT * FROM events WHERE case_id = ? ORDER BY event_date",
             (case_id,),
         ).fetchall()
+
+
+def delete_document(case_id: int, document_id: int) -> sqlite3.Row | None:
+    """Delete one document and its events; return the deleted row (for its media), or None.
+
+    Scoped to the case so a document id from another case can't be deleted via this one.
+    """
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM documents WHERE id = ? AND case_id = ?", (document_id, case_id)
+        ).fetchone()
+        if row is None:
+            return None
+        conn.execute("DELETE FROM events WHERE document_id = ?", (document_id,))
+        conn.execute("DELETE FROM documents WHERE id = ?", (document_id,))
+        return row
+
+
+def _clear_case(conn: sqlite3.Connection, case_id: int) -> list[str]:
+    paths = [
+        r["media_path"]
+        for r in conn.execute(
+            "SELECT media_path FROM documents WHERE case_id = ? AND media_path IS NOT NULL",
+            (case_id,),
+        )
+    ]
+    # Events first: foreign keys are enforced and there is no ON DELETE CASCADE.
+    conn.execute("DELETE FROM events WHERE case_id = ?", (case_id,))
+    conn.execute("DELETE FROM documents WHERE case_id = ?", (case_id,))
+    return paths
+
+
+def clear_case(case_id: int) -> list[str]:
+    """Delete every document and event in a case, keeping the case; return media paths."""
+    with get_connection() as conn:
+        return _clear_case(conn, case_id)
+
+
+def delete_case(case_id: int) -> bool:
+    """Delete a case with all its documents and events. False if it didn't exist."""
+    with get_connection() as conn:
+        _clear_case(conn, case_id)
+        return conn.execute("DELETE FROM cases WHERE id = ?", (case_id,)).rowcount > 0

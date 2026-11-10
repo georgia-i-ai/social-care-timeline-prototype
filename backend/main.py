@@ -6,6 +6,7 @@ management system, no risk scoring.
 """
 
 import datetime as dt
+import shutil
 import uuid
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from pipeline.extract import extract_document
 from pipeline.highlight import find_highlight_spans, locate
 from pipeline.ingest_file import ingest_file
 from pipeline.resolve_excerpt import resolve_excerpt
+from pipeline.split_turns import split_speaker_turns
 from pipeline.transcribe_audio import transcribe_audio
 from pipeline.transcribe_image import transcribe_image
 
@@ -80,6 +82,14 @@ class PendingDocumentOut(BaseModel):
     document_date: str | None
     date_confidence: str
     events: list[EventIO]
+
+
+class ReextractIn(BaseModel):
+    pending_media_id: str | None = None
+    media_ext: str | None = None
+    source_type: str
+    source_label: str
+    raw_text: str
 
 
 class ConfirmDocumentIn(BaseModel):
@@ -290,7 +300,7 @@ async def attach_document(case_id: int, file: UploadFile = File(...)):
         source_type = "audio"
         media_ext = result.extension
         pending_media_id = _stage_media(file_bytes, media_ext)
-        raw_text = transcribe_audio(file_bytes, media_ext)
+        raw_text = split_speaker_turns(transcribe_audio(file_bytes, media_ext))
     else:  # image
         pending_media_id = _stage_media(file_bytes, ".jpg")
         raw_text = transcribe_image(result.image_bytes, result.media_type)
@@ -303,8 +313,27 @@ async def attach_document(case_id: int, file: UploadFile = File(...)):
 async def record_document(case_id: int, audio: UploadFile = File(...)):
     audio_bytes = await audio.read()
     pending_media_id = _stage_media(audio_bytes, ".wav")
-    raw_text = transcribe_audio(audio_bytes)
+    raw_text = split_speaker_turns(transcribe_audio(audio_bytes))
     return _build_pending("audio", audio.filename or "recording", raw_text, pending_media_id, ".wav")
+
+
+@app.post("/api/cases/{case_id}/reextract", response_model=PendingDocumentOut)
+def reextract_document(case_id: int, payload: ReextractIn):
+    """Re-run extraction on a reviewer-corrected transcription, before it's saved.
+
+    Events are extracted from the text at upload time, so after an edit they'd no
+    longer match the text being saved (excerpts wouldn't highlight, details could
+    be wrong).
+    """
+    if not payload.raw_text.strip():
+        raise HTTPException(400, "The document text is empty.")
+    return _build_pending(
+        payload.source_type,
+        payload.source_label,
+        payload.raw_text,
+        payload.pending_media_id,
+        payload.media_ext,
+    )
 
 
 @app.post("/api/cases/{case_id}/documents")
@@ -331,3 +360,40 @@ def save_document(case_id: int, payload: ConfirmDocumentIn):
         db.add_events(doc_id, case_id, events)
 
     return {"document_id": doc_id}
+
+
+# ---------------------------------------------------------------------------
+# Deletion
+# ---------------------------------------------------------------------------
+
+def _remove_media(paths: list[str]) -> None:
+    """Best-effort: a file that's already gone shouldn't block deleting the record."""
+    for path in paths:
+        (MEDIA_ROOT / path).unlink(missing_ok=True)
+
+
+@app.delete("/api/cases/{case_id}/documents/{document_id}")
+def delete_document(case_id: int, document_id: int):
+    row = db.delete_document(case_id, document_id)
+    if row is None:
+        raise HTTPException(404, "Document not found in this case.")
+    if row["media_path"]:
+        _remove_media([row["media_path"]])
+    return {"ok": True}
+
+
+@app.delete("/api/cases/{case_id}/documents")
+def clear_case(case_id: int):
+    """Remove all of a case's documents and events, keeping the (now empty) case."""
+    if case_id not in {c["id"] for c in db.list_cases()}:
+        raise HTTPException(404, "Case not found.")
+    _remove_media(db.clear_case(case_id))
+    return {"ok": True}
+
+
+@app.delete("/api/cases/{case_id}")
+def delete_case(case_id: int):
+    if not db.delete_case(case_id):
+        raise HTTPException(404, "Case not found.")
+    shutil.rmtree(MEDIA_ROOT / str(case_id), ignore_errors=True)
+    return {"ok": True}
