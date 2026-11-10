@@ -48,7 +48,9 @@ data/       Synthetic seed documents for demoing each input mode
 
 The backend is a thin HTTP layer: `db.py` holds the schema (cases/documents/events)
 and `pipeline/` holds the framework-agnostic logic (transcription, LLM extraction,
-highlight-span finding, plus an LLM fallback that relocates paraphrased excerpts).
+highlight-span finding, an LLM fallback that relocates paraphrased excerpts, and an
+LLM step that breaks conversation transcripts into speaker turns - kept only if it
+reproduces the transcript word for word).
 `main.py` just wires those up to endpoints.
 
 ## Setup

@@ -19,10 +19,10 @@ export function Sidebar() {
       .catch(() => {});
   }
 
+  // Refetch on navigation, so the list reflects cases created or deleted elsewhere.
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pathname]);
 
   async function handleCreate() {
     if (!name.trim()) return;

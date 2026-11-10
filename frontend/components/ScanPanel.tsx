@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button, ButtonGroup, FileUpload } from "@i-dot-ai-npm/component-library-react";
+import { Button, ButtonGroup } from "@i-dot-ai-npm/component-library-react";
+import { FileField } from "@/components/FileField";
 
 /**
  * Photo of a note, from the camera or an upload.
@@ -109,11 +110,11 @@ export function ScanPanel({
       />
 
       {!cameraOn && (
-        <FileUpload
+        <FileField
+          label="Or upload a photo"
           accept="image/*"
           capture="environment"
-          aria-label="Photo of a note"
-          onChange={(e) => choose(e.target.files?.[0] ?? null)}
+          onFile={choose}
         />
       )}
 

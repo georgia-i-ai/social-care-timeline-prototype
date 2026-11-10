@@ -138,3 +138,29 @@ export function saveDocument(caseId: number, payload: ConfirmPayload): Promise<{
     body: JSON.stringify(payload),
   }).then((r) => handle(r));
 }
+
+export function deleteDocument(caseId: number, documentId: number): Promise<{ ok: boolean }> {
+  return fetch(`${API_BASE}/api/cases/${caseId}/documents/${documentId}`, {
+    method: "DELETE",
+  }).then((r) => handle(r));
+}
+
+/** Remove every document and event from a case, keeping the case itself. */
+export function clearCase(caseId: number): Promise<{ ok: boolean }> {
+  return fetch(`${API_BASE}/api/cases/${caseId}/documents`, { method: "DELETE" }).then((r) =>
+    handle(r)
+  );
+}
+
+export function deleteCase(caseId: number): Promise<{ ok: boolean }> {
+  return fetch(`${API_BASE}/api/cases/${caseId}`, { method: "DELETE" }).then((r) => handle(r));
+}
+
+/** Re-run extraction on reviewer-corrected text, so events match what gets saved. */
+export function reextractDocument(caseId: number, pending: PendingDocument): Promise<PendingDocument> {
+  return fetch(`${API_BASE}/api/cases/${caseId}/reextract`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(pending),
+  }).then((r) => handle(r));
+}

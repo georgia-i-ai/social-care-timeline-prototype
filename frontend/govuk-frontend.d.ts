@@ -8,6 +8,7 @@ declare module "govuk-frontend" {
 
     export const Accordion: GOVUKComponent;
     export const Tabs: GOVUKComponent;
+    export const FileUpload: GOVUKComponent;
 
     export function initAll(): void;
 }

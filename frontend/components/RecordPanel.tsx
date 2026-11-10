@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button, ButtonGroup, FileUpload } from "@i-dot-ai-npm/component-library-react";
+import { Button, ButtonGroup } from "@i-dot-ai-npm/component-library-react";
+import { FileField } from "@/components/FileField";
 
 export function RecordPanel({
   onSubmit,
@@ -55,15 +56,13 @@ export function RecordPanel({
             ■ Stop
           </Button>
         )}
-        <FileUpload
-          accept="audio/*"
-          aria-label="Audio file"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) setBlob(f);
-          }}
-        />
       </ButtonGroup>
+
+      <FileField
+        label="Or upload an audio file"
+        accept="audio/*"
+        onFile={(f) => f && setBlob(f)}
+      />
 
       {blob && <audio controls src={URL.createObjectURL(blob)} />}
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { Button } from "@i-dot-ai-npm/component-library-react";
 import { DocumentOut } from "@/lib/api";
+import { unwrapLines } from "@/lib/reflow";
 
 const IMPORTANCE_COLOR: Record<string, string> = {
   high: "#ffb3b3",
@@ -49,12 +51,14 @@ export function DocumentPanel({
   focusedEventId,
   expanded,
   onToggle,
+  onDelete,
   apiBase,
 }: {
   document: DocumentOut;
   focusedEventId: number | null;
   expanded: boolean;
   onToggle: () => void;
+  onDelete: () => void;
   apiBase: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,10 +101,13 @@ export function DocumentPanel({
               />
             )}
             <div className="govuk-body" style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-              {renderHighlighted(document.raw_text, document.highlights, focusedEventId)}
+              {renderHighlighted(unwrapLines(document.raw_text), document.highlights, focusedEventId)}
             </div>
           </div>
           {isAudio && <audio controls src={`${apiBase}${document.media_url}`} className="w-full" />}
+          <Button type="button" warning small class="govuk-!-margin-bottom-0" onClick={onDelete}>
+            Delete document
+          </Button>
         </div>
       )}
     </div>

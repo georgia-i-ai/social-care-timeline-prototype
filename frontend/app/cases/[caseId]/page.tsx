@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button, ButtonGroup } from "@i-dot-ai-npm/component-library-react";
 import {
   API_BASE,
@@ -10,8 +10,12 @@ import {
   EventRow,
   PendingDocument,
   attachDocument,
+  clearCase,
+  deleteCase,
+  deleteDocument,
   getCase,
   recordDocument,
+  reextractDocument,
   saveDocument,
   scanDocument,
 } from "@/lib/api";
@@ -29,6 +33,7 @@ type ChronologyView = "timeline" | "table";
 export default function CasePage() {
   const params = useParams<{ caseId: string }>();
   const caseId = Number(params.caseId);
+  const router = useRouter();
 
   const [caseDetail, setCaseDetail] = useState<CaseDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,13 +78,19 @@ export default function CasePage() {
 
   async function handleConfirm(
     documentDate: string,
-    dateConfidence: "high" | "low" | "user_provided"
+    dateConfidence: "high" | "low" | "user_provided",
+    rawText: string
   ) {
     if (!pending) return;
     setSaving(true);
     setError(null);
     try {
-      await saveDocument(caseId, { ...pending, document_date: documentDate, date_confidence: dateConfidence });
+      // Edited text needs fresh events, or excerpts and details won't match it.
+      const doc =
+        rawText === pending.raw_text
+          ? pending
+          : await reextractDocument(caseId, { ...pending, raw_text: rawText });
+      await saveDocument(caseId, { ...doc, document_date: documentDate, date_confidence: dateConfidence });
       setPending(null);
       refresh();
     } catch (e) {
@@ -87,6 +98,24 @@ export default function CasePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  /** Irreversible, so always confirm first; `after` resets view state once it's done. */
+  async function confirmAndRun(message: string, action: () => Promise<unknown>, after: () => void) {
+    if (!window.confirm(message)) return;
+    setError(null);
+    try {
+      await action();
+      after();
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
+  function resetAndRefresh() {
+    setFocusedEventId(null);
+    setExpandedDocId(null);
+    refresh();
   }
 
   function handleSelectEvent(event: EventRow) {
@@ -103,6 +132,37 @@ export default function CasePage() {
         All cases
       </Link>
       <h1 className="govuk-heading-l">Case: {caseDetail.name}</h1>
+      <ButtonGroup>
+        <Button
+          type="button"
+          secondary
+          small
+          disabled={caseDetail.documents.length === 0}
+          onClick={() =>
+            confirmAndRun(
+              `Remove all documents and events from "${caseDetail.name}"? The case itself is kept. This can't be undone.`,
+              () => clearCase(caseId),
+              resetAndRefresh
+            )
+          }
+        >
+          Clear case
+        </Button>
+        <Button
+          type="button"
+          warning
+          small
+          onClick={() =>
+            confirmAndRun(
+              `Delete the case "${caseDetail.name}" and everything in it? This can't be undone.`,
+              () => deleteCase(caseId),
+              () => router.push("/")
+            )
+          }
+        >
+          Delete case
+        </Button>
+      </ButtonGroup>
       {error && <p className="govuk-error-message">{error}</p>}
 
       {pending ? (
@@ -203,13 +263,23 @@ export default function CasePage() {
                 <p className="govuk-hint">No documents yet.</p>
               )}
               <div className="space-y-2">
-                {[...caseDetail.documents].reverse().map((doc) => (
+                {/* Oldest first, matching the chronology; ISO dates sort as strings. */}
+                {[...caseDetail.documents]
+                  .sort((a, b) => a.document_date.localeCompare(b.document_date) || a.id - b.id)
+                  .map((doc) => (
                   <DocumentPanel
                     key={doc.id}
                     document={doc}
                     focusedEventId={focusedEventId}
                     expanded={expandedDocId === doc.id}
                     onToggle={() => setExpandedDocId(expandedDocId === doc.id ? null : doc.id)}
+                    onDelete={() =>
+                      confirmAndRun(
+                        `Delete "${doc.source_label ?? doc.source_type}" and the events extracted from it? This can't be undone.`,
+                        () => deleteDocument(caseId, doc.id),
+                        resetAndRefresh
+                      )
+                    }
                     apiBase={API_BASE}
                   />
                 ))}
